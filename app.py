@@ -158,19 +158,27 @@ st.markdown("""
 # LOAD MODELS
 # ==========================================================
 
+# ==========================================================
+# LOAD MODELS
+# ==========================================================
+
 @st.cache_resource
 def load_models():
+
+    custom_objects = {
+        "TrueDivide": tf.keras.layers.Layer
+    }
 
     mobilenet_model = tf.keras.models.load_model(
         "best_mobilenet.h5",
         compile=False,
-        safe_mode=False
+        custom_objects=custom_objects
     )
 
     dcnn_model = tf.keras.models.load_model(
         "dcnn_model.h5",
         compile=False,
-        safe_mode=False
+        custom_objects=custom_objects
     )
 
     return mobilenet_model, dcnn_model
