@@ -154,11 +154,15 @@ st.markdown("""
 # LOAD MODELS
 # ==========================================================
 
+# ==========================================================
+# LOAD MODELS
+# ==========================================================
+
 @st.cache_resource
 def load_models():
 
     mobilenet_model = tf.keras.models.load_model(
-        "mobilenet_model.h5",
+        "best_mobilenet.h5",
         compile=False,
         safe_mode=False
     )
@@ -181,6 +185,15 @@ try:
 except Exception as e:
 
     st.error(f"Gagal load model:\n\n{e}")
+
+    st.info("""
+    Pastikan file berikut berada dalam folder yang sama dengan app.py:
+
+    • best_mobilenet.h5
+    • dcnn_model.h5
+    • requirements.txt
+    """)
+
     st.stop()
 
 # ==========================================================
