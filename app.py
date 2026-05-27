@@ -168,22 +168,16 @@ class TrueDivide(tf.keras.layers.Layer):
 @st.cache_resource
 def load_models():
 
-    custom_objects = {
-        "TrueDivide": TrueDivide
-    }
-
+    # LOAD MOBILENET
     mobilenet_model = tf.keras.models.load_model(
         "best_mobilenet.h5",
-        compile=False,
-        custom_objects=custom_objects,
-        safe_mode=False
+        compile=False
     )
 
+    # LOAD DCNN
     dcnn_model = tf.keras.models.load_model(
         "dcnn_model.h5",
-        compile=False,
-        custom_objects=custom_objects,
-        safe_mode=False
+        compile=False
     )
 
     return mobilenet_model, dcnn_model
@@ -200,8 +194,9 @@ except Exception as e:
     st.error(f"Gagal load model:\n\n{e}")
 
     st.info("""
-    Pastikan file berikut berada dalam folder yang sama dengan app.py:
+    Pastikan file berikut ada dalam folder yang sama:
 
+    • app.py
     • best_mobilenet.h5
     • dcnn_model.h5
     • requirements.txt
@@ -229,9 +224,10 @@ def preprocess_mobilenet(image):
 
     arr = np.array(img).astype(np.float32)
 
-    arr = np.expand_dims(arr, axis=0)
+    # preprocess manual
+    arr = (arr / 127.5) - 1.0
 
-    arr = tf.keras.applications.mobilenet_v2.preprocess_input(arr)
+    arr = np.expand_dims(arr, axis=0)
 
     return arr
 
