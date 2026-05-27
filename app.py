@@ -158,13 +158,15 @@ st.markdown("""
 def load_models():
 
     mobilenet_model = tf.keras.models.load_model(
-        "best_mobilenet.h5",
-        compile=False
+        "mobilenet_model.h5",
+        compile=False,
+        safe_mode=False
     )
 
     dcnn_model = tf.keras.models.load_model(
         "dcnn_model.h5",
-        compile=False
+        compile=False,
+        safe_mode=False
     )
 
     return mobilenet_model, dcnn_model
