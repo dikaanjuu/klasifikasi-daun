@@ -8,6 +8,7 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+from tensorflow.keras.layers import TFSMLayer
 
 # ==========================================================
 # PAGE CONFIG
@@ -32,8 +33,6 @@ html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* BACKGROUND */
-
 .stApp {
     background: linear-gradient(
         135deg,
@@ -41,85 +40,55 @@ html, body, [class*="css"] {
         #102418 50%,
         #07130a 100%
     );
-    color: white;
 }
-
-/* HEADER */
 
 .main-title {
     text-align: center;
     font-size: 3rem;
     font-weight: 700;
-    color: #8ef7a3;
-    margin-bottom: 0.3rem;
+    color: #9be7a1;
+    margin-bottom: 0.5rem;
 }
 
 .sub-title {
     text-align: center;
-    color: #cfd8dc;
+    color: #b7c9bb;
     margin-bottom: 2rem;
 }
 
-/* CARD */
-
 .card {
-    background: rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 22px;
+    border-radius: 20px;
     padding: 1.5rem;
-    margin-bottom: 1rem;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
 }
-
-/* MODEL TITLE */
-
-.model-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 1rem;
-}
-
-/* RESULT */
 
 .result-good {
     color: #69f0ae;
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
 }
 
 .result-bad {
     color: #ff8a65;
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
 }
 
 .metric-text {
-    color: #dfe6e9;
+    color: #d0d7de;
     font-size: 1rem;
+}
+
+.model-title {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
     margin-bottom: 1rem;
 }
 
-/* INFO BOX */
-
-.info-box {
-    background: rgba(105,240,174,0.08);
-    border-left: 4px solid #69f0ae;
-    padding: 1rem;
-    border-radius: 12px;
-    color: #e0e0e0;
-    margin-bottom: 1rem;
-}
-
-/* IMAGE */
-
-img {
-    border-radius: 20px !important;
-}
-
-/* PROGRESS BAR */
-
-.stProgress > div > div > div > div {
+.stProgress > div > div {
     background: linear-gradient(
         90deg,
         #69f0ae,
@@ -127,7 +96,13 @@ img {
     );
 }
 
-/* FOOTER */
+.info-box {
+    background: rgba(105,240,174,0.08);
+    border-left: 4px solid #69f0ae;
+    padding: 1rem;
+    border-radius: 10px;
+    color: #e0e0e0;
+}
 
 .footer {
     text-align:center;
@@ -156,25 +131,35 @@ Perbandingan prediksi MobileNetV2 dan DCNN untuk klasifikasi kondisi daun
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# INFO BOX
+# INFO
 # ==========================================================
 
 st.markdown("""
 <div class="info-box">
 
-✅ <b>Model yang digunakan:</b><br><br>
+✅ Model yang digunakan:
 
-• MobileNetV2 (Transfer Learning)<br>
-• DCNN (Deep CNN From Scratch)<br><br>
+• MobileNetV2 (Transfer Learning)  
+• DCNN (Deep CNN From Scratch)
 
-📌 <b>Kelas:</b><br>
-- Daun Sehat<br>
-- Daun Kering<br><br>
+📌 Kelas:
+- Daun Sehat
+- Daun Kering
 
-📷 Upload gambar atau gunakan kamera untuk prediksi realtime.
+📷 Gunakan upload gambar atau kamera HP untuk prediksi realtime.
 
 </div>
 """, unsafe_allow_html=True)
+
+# ==========================================================
+# FIX TrueDivide ERROR
+# ==========================================================
+
+class TrueDivide(tf.keras.layers.Layer):
+
+    def call(self, inputs):
+        return inputs / 127.5
+
 
 # ==========================================================
 # LOAD MODELS
@@ -183,11 +168,13 @@ st.markdown("""
 @st.cache_resource
 def load_models():
 
+    # LOAD MOBILENET
     mobilenet_model = tf.keras.models.load_model(
         "best_mobilenet.h5",
         compile=False
     )
 
+    # LOAD DCNN
     dcnn_model = tf.keras.models.load_model(
         "dcnn_model.h5",
         compile=False
@@ -237,7 +224,7 @@ def preprocess_mobilenet(image):
 
     arr = np.array(img).astype(np.float32)
 
-    # MANUAL PREPROCESS
+    # preprocess manual
     arr = (arr / 127.5) - 1.0
 
     arr = np.expand_dims(arr, axis=0)
@@ -326,7 +313,7 @@ if image_input is not None:
 
     st.markdown("---")
 
-    preview_col, result_col = st.columns([1, 1.4])
+    preview_col, result_col = st.columns([1, 2])
 
     # ======================================================
     # IMAGE PREVIEW
@@ -334,25 +321,21 @@ if image_input is not None:
 
     with preview_col:
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
         st.image(
             image_input,
-            caption="📷 Gambar Input",
+            caption="Input Image",
             width=350
         )
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
     # ======================================================
-    # RESULT SECTION
+    # RESULTS
     # ======================================================
 
     with result_col:
 
         with st.spinner("🔍 Menganalisis gambar..."):
 
-            # MobileNet Prediction
+            # MobileNet
             mn_input = preprocess_mobilenet(image_input)
 
             mn_label, mn_conf, mn_scores = predict_model(
@@ -360,7 +343,7 @@ if image_input is not None:
                 mn_input
             )
 
-            # DCNN Prediction
+            # DCNN
             dcnn_input = preprocess_dcnn(image_input)
 
             dcnn_label, dcnn_conf, dcnn_scores = predict_model(
@@ -371,12 +354,14 @@ if image_input is not None:
         col_mn, col_dcnn = st.columns(2)
 
         # ==================================================
-        # MOBILENET CARD
+        # MOBILENET RESULT
         # ==================================================
 
         with col_mn:
 
-            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown("""
+            <div class="card">
+            """, unsafe_allow_html=True)
 
             st.markdown("""
             <div class="model-title">
@@ -402,40 +387,29 @@ if image_input is not None:
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("#### 📊 Probabilitas")
+            st.markdown("### Probabilitas")
 
             for cls, score in sorted(
                 mn_scores.items(),
                 key=lambda x: -x[1]
             ):
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        margin-bottom:4px;
-                        color:white;
-                        font-size:15px;
-                    ">
-                        <span>{cls}</span>
-                        <span>{score:.2f}%</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                st.write(f"{cls} — {score:.2f}%")
+                st.progress(int(score))
 
-                st.progress(score / 100)
-
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("""
+            </div>
+            """, unsafe_allow_html=True)
 
         # ==================================================
-        # DCNN CARD
+        # DCNN RESULT
         # ==================================================
 
         with col_dcnn:
 
-            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown("""
+            <div class="card">
+            """, unsafe_allow_html=True)
 
             st.markdown("""
             <div class="model-title">
@@ -461,32 +435,19 @@ if image_input is not None:
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("#### 📊 Probabilitas")
+            st.markdown("### Probabilitas")
 
             for cls, score in sorted(
                 dcnn_scores.items(),
                 key=lambda x: -x[1]
             ):
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        margin-bottom:4px;
-                        color:white;
-                        font-size:15px;
-                    ">
-                        <span>{cls}</span>
-                        <span>{score:.2f}%</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                st.write(f"{cls} — {score:.2f}%")
+                st.progress(int(score))
 
-                st.progress(score / 100)
-
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("""
+            </div>
+            """, unsafe_allow_html=True)
 
     # ======================================================
     # COMPARISON
@@ -513,7 +474,7 @@ if image_input is not None:
         )
 
     # ======================================================
-    # FINAL RESULT
+    # FINAL INTERPRETATION
     # ======================================================
 
     st.markdown("---")
@@ -543,7 +504,7 @@ if image_input is not None:
 st.markdown("""
 <div class="footer">
 
-🌿 Leaf Condition Classifier<br>
+🌿 Leaf Condition Classifier  
 Deep Learning Project — MobileNetV2 + DCNN
 
 </div>
