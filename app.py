@@ -8,6 +8,7 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+from tensorflow.keras.layers import TFSMLayer
 
 # ==========================================================
 # PAGE CONFIG
@@ -151,12 +152,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# LOAD MODELS
+# FIX TrueDivide ERROR
 # ==========================================================
 
-# ==========================================================
-# LOAD MODELS
-# ==========================================================
+class TrueDivide(tf.keras.layers.Layer):
+
+    def call(self, inputs):
+        return inputs / 127.5
+
 
 # ==========================================================
 # LOAD MODELS
@@ -166,19 +169,21 @@ st.markdown("""
 def load_models():
 
     custom_objects = {
-        "TrueDivide": tf.keras.layers.Layer
+        "TrueDivide": TrueDivide
     }
 
     mobilenet_model = tf.keras.models.load_model(
         "best_mobilenet.h5",
         compile=False,
-        custom_objects=custom_objects
+        custom_objects=custom_objects,
+        safe_mode=False
     )
 
     dcnn_model = tf.keras.models.load_model(
         "dcnn_model.h5",
         compile=False,
-        custom_objects=custom_objects
+        custom_objects=custom_objects,
+        safe_mode=False
     )
 
     return mobilenet_model, dcnn_model
@@ -312,7 +317,7 @@ if image_input is not None:
 
     st.markdown("---")
 
-    preview_col, result_col = st.columns([1,2])
+    preview_col, result_col = st.columns([1, 2])
 
     # ======================================================
     # IMAGE PREVIEW
