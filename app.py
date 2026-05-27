@@ -224,9 +224,6 @@ def preprocess_mobilenet(image):
 
     arr = np.array(img).astype(np.float32)
 
-    # preprocess manual
-    arr = (arr / 127.5) - 1.0
-
     arr = np.expand_dims(arr, axis=0)
 
     return arr
