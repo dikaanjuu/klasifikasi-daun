@@ -324,7 +324,7 @@ if image_input is not None:
         st.image(
             image_input,
             caption="Input Image",
-            use_container_width=True
+            width=350
         )
 
     # ======================================================
