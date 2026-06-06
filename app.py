@@ -236,8 +236,6 @@ def preprocess_dcnn(image):
 
     arr = np.array(img).astype(np.float32)
 
-    arr = arr / 255.0
-
     arr = np.expand_dims(arr, axis=0)
 
     return arr
