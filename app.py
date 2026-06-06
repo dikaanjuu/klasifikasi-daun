@@ -251,14 +251,27 @@ def predict_model(model, img_array):
         verbose=0
     )[0]
 
-    class_idx = int(np.argmax(prediction))
+    class_idx = int(
+        np.argmax(prediction)
+    )
+
+    confidence = float(
+        prediction[class_idx]
+    ) * 100
+
+    if confidence < 75:
+
+        return (
+            "⚠️ Bukan Daun / Tidak Dikenali",
+            confidence,
+            {}
+        )
 
     label = CLASS_NAMES[class_idx]
 
-    confidence = float(prediction[class_idx]) * 100
-
     scores = {
-        CLASS_NAMES[i]: float(prediction[i]) * 100
+        CLASS_NAMES[i]:
+        float(prediction[i]) * 100
         for i in range(len(CLASS_NAMES))
     }
 
